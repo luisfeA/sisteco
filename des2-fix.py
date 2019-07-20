@@ -362,6 +362,36 @@ def decrypt(key, text):
 
 
 ###################################################################################################
+# Entrada: El numero de ciclos de encriptación a realizar, Llave inicial, texto a cifrado
+# Salida:  Retorna el tiempo que se demora en cifrar y descifrar cierta cantidad de mensajes
+# Funcion: Crea un tiempo de partida y un tiempo final y retorna la resta de ambos para determinar el tiempo total
+###################################################################################################
+def n_message_test(n, text, key): # FUNCIONES DE TESTING
+    t1 = time()
+    for i in range(n):
+        cifrado = encrypt(key, text)  # Cifrado
+        decrypt(key, cifrado)  # Descifrado
+    t2 = time()
+    return t2 - t1
+
+
+###################################################################################################
+# Entrada: El tamano del mensajes, Llave inicial, texto a cifrado y descifrar
+# Salida:  Retorna el tiempo que se demora en cifrar y descifrar un mensaje con cierto tamano
+# Funcion: Crea un tiempo de partida y un tiempo final y retorna la resta de ambos para determinar el tiempo total
+###################################################################################################
+def size_message_test(n, key): # FUNCIONES DE TESTING
+    text = "a"
+    for i in range(n):
+        text += "a"
+    t1 = time()
+    cifrado = encrypt(key, text)
+    decrypt(key, cifrado)
+    t2 = time()
+    return t2 - t1
+
+
+###################################################################################################
 # Entrada: La Llave inicial, texto a cifrado y descifrar y la posicion del bit a cambiar
 # Salida:  Retorna la probabilidad de error al cambiar un solo bit
 # Funcion: Llama a la funcion run_test que es para determinar que tanto cambian los bit al realizar el proceso de cifrado cuando se le cambia un bit en la entrada
