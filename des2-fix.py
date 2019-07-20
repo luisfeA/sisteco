@@ -2,6 +2,7 @@ from pylab import *
 import matplotlib.pyplot as plt
 from time import time
 import random
+import sys
 
 
 ENCRYPT = 1
@@ -147,7 +148,7 @@ def bit_array_to_string(array):  # Recreate the string from the bit array
 # Funcion: Crea un string con los valores binarios, en caso de que el largo de la cadena de binarios
 #         es menor al tamaño que se especifica se rellena con ceros.
 ###################################################################################################
-def binvalue(val, bitsize):  # Return the binary value as a string of the given size
+def binvalue(val, bitsize):
     binval = bin(val)[2:] if isinstance(val, int) else bin(ord(val))[2:]
     if len(binval) > bitsize:
         raise Exception("binary value larger than the expected size")
@@ -161,16 +162,8 @@ def binvalue(val, bitsize):  # Return the binary value as a string of the given 
 # Salida:  Los subarreglos
 # Funcion: Cortar una lista segun el tamano que se especifica
 ###################################################################################################
-def nsplit(s, n):  # Split a list into sublists of size "n"
+def nsplit(s, n):
     return [s[k:k + n] for k in range(0, len(s), n)]
-
-
-#########INIT##########3
-
-def initDes():
-
-    return ["","",[]]  #pass,text,keys
-
 
 
 ###################################################################################################
@@ -210,16 +203,6 @@ def removePadding(data):
 ###################################################################################################
 def permut(block, table):
     return [block[x - 1] for x in table]
-
-
-###################################################################################################
-# Entrada: Arreglo que representa el bloque y una matriz que representa la tabla de permutaciones
-# Salida:  Arreglo con los bits permutados
-# Funcion: Realizar la permutacion del bloque usando la tabla correspondiente
-###################################################################################################
-def expand(block, table):  # Hace los mismo que el metodo para permutar, solo que se usa otro nombre para no entrar en confusion
-    return [block[x - 1] for x in table]
-#deprecable?
 
 
 ###################################################################################################
@@ -271,17 +254,13 @@ def generatekeys(password):
 # Salida:  Mensaje cifrado o descifrado
 # Funcion: Realiza el proceso de cifrado o descifrado segun la accion que se especifique
 ###################################################################################################
-def run(key, text, action=ENCRYPT, padding=False):
-    #deslist=initDes() #pass,text,keys
+def run(key, text, action=ENCRYPT):
     if len(key) < 8:
         raise Exception("La llave debe ser al menos de longitud 8 bit")
     elif len(key) > 8:
         key = key[:8]  # Si la llave es mayor a 8 se corta en los 8 primeros bits
 
-    #deslist[0] = key
-    #deslist[1] = text
-
-    if padding and action == ENCRYPT:
+    if action == ENCRYPT:
         text = addPadding(text)
     elif len(text) % 8 != 0:  # Si no se especifica el padding en TRUE solo se pueden procesar textos de largo multiplos de 8
         raise Exception("Tamanno del dato debe ser multipĺo de 8")
@@ -295,7 +274,7 @@ def run(key, text, action=ENCRYPT, padding=False):
         g, d = nsplit(bloque, 32)  # g(LEFT), d(RIGHT)
         tmp = None
         for i in range(16):  # Aqui se realizan las 16 rondas
-            d_e = expand(d, E)  # Se expande d (32 bits) para que coincida con el tamaño de Ki(48bits)
+            d_e = permut(d, E)  # Se expande d (32 bits) para que coincida con el tamaño de Ki(48bits)
             if action == ENCRYPT:
                 tmp = xor(keys[i], d_e)  # Si es para encriptar se usa Ki
             else:
@@ -307,7 +286,7 @@ def run(key, text, action=ENCRYPT, padding=False):
             d = tmp
         result += permut(d + g, PI_1)  # Hace la ultima permutación y agrega ese resultado en la variable result
     final_res = bit_array_to_string(result)
-    if padding and action == DECRYPT:
+    if action == DECRYPT:
         return removePadding(final_res)  # Se remueve el padding si se esta descifrando y si padding = True
     else:
         return final_res  # Retorna el string final para el cifrado y descifrado
@@ -318,20 +297,15 @@ def run(key, text, action=ENCRYPT, padding=False):
 #
 #
 ###################################################################################################
-def run_test(key, text, n, action=ENCRYPT, padding=False):
-    #deslist=initDes() #pass,text,keys
+def run_test(key, text, n, action=ENCRYPT):
     if len(key) < 8:
         raise Exception("La llave debe ser de longitud 8 bit")
     elif len(key) > 8:
         key = key[:8]  # Si la llave es mayor a 8 se corta en los 8 primeros bits
 
-    #deslist[0] = key
-    #deslist[1] = text
-
-    if padding and action == ENCRYPT:
-        deslist[1] = addPadding(text)
-    elif len(
-            self.text) % 8 != 0:  # Si no se especifica el padding solo se pueden porcesar textos de largo multiplos de 8
+    if action == ENCRYPT:
+        text = addPadding(text)
+    elif len(text) % 8 != 0:  # Si no se especifica el padding solo se pueden porcesar textos de largo multiplos de 8
         raise Exception("Tamano del dato debe ser multiĺo de 8")
 
     keys = generatekeys(key)  # Aqui se generan todas las llaves
@@ -350,21 +324,20 @@ def run_test(key, text, n, action=ENCRYPT, padding=False):
         g, d = nsplit(bloque, 32)  # g(LEFT), d(RIGHT)
         tmp = None
         for i in range(16):  # Aqui se realizan las 16 rondas
-            d_e = self.expand(d, E)  # Se expande d (32 bits) para que coincida con el tamaño de Ki(48bits)
+            d_e = permut(d, E)  # Se expande d (32 bits) para que coincida con el tamaño de Ki(48bits)
             if action == ENCRYPT:
-                tmp = self.xor(self.keys[i], d_e)  # Si es para encriptar se usa Ki
+                tmp = xor(keys[i], d_e)  # Si es para encriptar se usa Ki
             else:
-                tmp = self.xor(self.keys[15 - i], d_e)  # Si es para desencriptar se usa la ultima llave
-            tmp = self.substitute(tmp)  # Metodo que aplica los SBOXes
-            tmp = self.permut(tmp, P)
-            tmp = self.xor(g, tmp)
+                tmp = xor(keys[15 - i], d_e)  # Si es para desencriptar se usa la ultima llave
+            tmp = substitute(tmp)  # Metodo que aplica los SBOXes
+            tmp = permut(tmp, P)
+            tmp = xor(g, tmp)
             g = d
             d = tmp
-        result += self.permut(d + g,
-                              PI_1)  # Hace la ultima permutación y agrega ese resultado en la variable result
+        result += permut(d + g,PI_1)  # Hace la ultima permutación y agrega ese resultado en la variable result
         # Termina el proceso que produce el efecto avalancha
     final_res = bit_array_to_string(result)
-    if padding and action == DECRYPT:
+    if action == DECRYPT:
         return removePadding(final_res)  # Se remueve el padding si se esta descifrando y si padding = True
     else:
         return final_res  # Retorna el string final para el cifrado y descifrado
@@ -375,8 +348,8 @@ def run_test(key, text, n, action=ENCRYPT, padding=False):
 # Salida:  Retorna el texto cifrado
 # Funcion: Llama el metodo run, que realiza el proceso de cifrado/descifrado
 ###################################################################################################
-def encrypt(key, text, padding=False):
-    return run(key, text, ENCRYPT, padding)
+def encrypt(key, text):
+    return run(key, text, ENCRYPT)
 
 
 ###################################################################################################
@@ -384,48 +357,18 @@ def encrypt(key, text, padding=False):
 # Salida:  Retorna el texto descifrado
 # Funcion: Llama el metodo run, que realiza el proceso de cifrado/descifrado
 ###################################################################################################
-def decrypt(key, text, padding=False):
-    return run(key, text, DECRYPT, padding)
-
-
-###################################################################################################
-# Entrada: El numero de mensajes, Llave inicial, texto a cifrado
-# Salida:  Retorna el tiempo que se demora en cifrar y descifrar cierta cantidad de mensajes
-# Funcion: Crea un tiempo de partida y un tiempo final y retorna la resta de ambos para determinar el tiempo total
-###################################################################################################
-def n_message_test(self, n, text, key):
-    t1 = time()
-    for i in range(n):
-        cifrado = encrypt(key, text, True)  # Cifrado
-        decrypt(key, cifrado, True)  # Descifrado
-    t2 = time()
-    return t2 - t1
-
-
-###################################################################################################
-# Entrada: El tamano del mensajes, Llave inicial, texto a cifrado y descifrar
-# Salida:  Retorna el tiempo que se demora en cifrar y descifrar un mensaje con cierto tamano
-# Funcion: Crea un tiempo de partida y un tiempo final y retorna la resta de ambos para determinar el tiempo total
-###################################################################################################
-def size_message_test(self, n, key):
-    text = "a"
-    for i in range(n):
-        text += "a"
-    t1 = time()
-    cifrado = encrypt(key, text, True)
-    decrypt(key, cifrado, True)
-    t2 = time()
-    return t2 - t1
+def decrypt(key, text):
+    return run(key, text, DECRYPT)
 
 
 ###################################################################################################
 # Entrada: La Llave inicial, texto a cifrado y descifrar y la posicion del bit a cambiar
 # Salida:  Retorna la probabilidad de error al cambiar un solo bit
-# Funcion: Llamma a la funcion run_test que es para determinar que tanto cambian los bit al realizar el proceso de cifrado cuando se le cambia un bit en la entrada
+# Funcion: Llama a la funcion run_test que es para determinar que tanto cambian los bit al realizar el proceso de cifrado cuando se le cambia un bit en la entrada
 ###################################################################################################
-def efecto_avalancha(self, key, text, n):
-    cifrado = encrypt(key, text, True)
-    cifrado2 = run_test(key, text, n, ENCRYPT, True)
+def efecto_avalancha(key, text, n):
+    cifrado = encrypt(key, text)
+    cifrado2 = run_test(key, text, n, ENCRYPT)
 
     bin1 = string_to_bit_array(cifrado)
     bin2 = string_to_bit_array(cifrado2)
@@ -438,12 +381,61 @@ def efecto_avalancha(self, key, text, n):
     return prob
 
 
-# Bloque principal
 
-key = "secret_k"
-text = "Hello woHello wo kjkljlkjk"
 
-r = encrypt(key, text, True)
-r2 = decrypt("secret_k", r, True)
-print("Ciphered: %r" % r)
-print("Deciphered: ", r2)
+def modo():
+    #modo simple de encriptación de una sola palabra
+    if len(sys.argv) == 4:
+        print("Usando instrucciones de la línea de comandos")
+        if sys.argv[1]=="0":
+            print("Encriptando...")
+        elif sys.argv[1]=="1":
+            print("Desencriptando...")
+        elif sys.argv[1]=="2":
+            print("Test de desempeño")
+        elif sys.argv[1]=="3":
+            print("Comparación")
+        m = sys.argv[1]
+        key = sys.argv[2]
+        text = sys.argv[3]
+    else: #Modo interactivo
+
+        print("     _____ _______     _______ _______ ____   _____ ")
+        print("    / ____|  __ \ \   / /  __ \__   __/ __ \ / ____|")
+        print("   | |    | |__) \ \_/ /| |__) | | | | |  | | (___  ")
+        print("   | |    |  _  / \   / |  ___/  | | | |  | |\___ \ ")
+        print("   | |____| | \ \  | |  | |      | | | |__| |____) |")
+        print("    \_____|_|  \_\ |_|  |_|      |_|  \____/|_____/ ")
+        print("")
+        print("Modos disponibles: ")
+        print("0=>Encriptar, 1=> Desencriptar, 2=>Test de avalancha (texto), 3=> Comparación")
+        while True:
+            m = input("Ingrese acción a realizar: ")
+            key = input("Ingrese password de 8 caracteres: ")
+            text  = input("Ingrese texto: ")
+            if m=="1" or m=="2" or m=="3" or m=="4" :
+                break
+
+    if m == "0":
+        cifrado = encrypt(key, text)
+        print("Cifrado: %r" % cifrado)
+    elif m == "1":
+        plano = decrypt(key, text)
+        print("Descifrado: ", plano)
+    elif m == "2":
+        resultado = efecto_avalancha(key, text, 1) # se usa para revisar el efecto avalancha. Cambia el caracter n-ésimo
+        print("Porcentaje idéntico: %r" % (resultado*100))
+    elif m == "3":
+        cifrado = encrypt(key, text)
+        plano = decrypt(key, cifrado)
+        print("Cifrado: %r" % cifrado)
+        print("Descifrado: ", plano)
+    else:
+        print("Modo incorrecto")
+        # print(">%s<" % m)
+
+    return 1
+
+
+modo()
+print("--Fin--")
